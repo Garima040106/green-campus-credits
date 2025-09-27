@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Green Campus Credits</title>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDBm8Yat4HwaFOOUPwPyiJY2pRd9r4WD9w&callback=initMap"></script>
+  <style>
+    :root{
+      --bg:#0b0f19;
+      --panel:#12182a;
+      --muted:#9aa4b2;
+      --primary:#5b7cfa;
+      --accent:#7f56d9;
+      --success:#2ecc71;
+      --danger:#ff5d5d;
+      --warning:#f6c445;
+      --white:#fff;
+      --radius:16px;
+      --shadow:0 10px 30px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,'Helvetica Neue',Arial,'Noto Sans',sans-serif;
+      background:linear-gradient(180deg,#0b0f19 0%, #0e1424 60%, #0b0f19 100%);
+      color:var(--white);
+      -webkit-font-smoothing:antialiased;
+    }
+
+    /* App Shell */
+    .app{
+      max-width:1100px;
+      margin:0 auto;
+      padding:16px 16px 90px;
+      min-height:100vh;
+      position:relative;
+    }
+    .topbar{
+      position:sticky;top:0;z-index:10;
+      display:flex;align-items:center;justify-content:space-between;
+      gap:12px;
+      padding:16px;
+      background:rgba(11,15,25,.7);
+      backdrop-filter: blur(8px);
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px}
+    .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent)}
+    .top-actions{display:flex;gap:10px}
+    .btn{
+      border:none;cursor:pointer;border-radius:12px;padding:10px 14px;font-weight:600;
+      background:var(--panel);color:var(--white);box-shadow:var(--shadow);
+    }
+    .btn.primary{background:linear-gradient(135deg,var(--primary),var(--accent))}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,.12)}
+    .btn.success{background:linear-gradient(135deg,#3acf8e,var(--success))}
+    .btn.danger{background:linear-gradient(135deg,#ff6b6b,var(--danger))}
+
+    .grid{display:grid;gap:16px}
+    @media(min-width:900px){.grid.cols-3{grid-template-columns:1.2fr 1fr 1fr}}
+    @media(min-width:900px){.grid.cols-2{grid-template-columns:1.2fr 1fr}}
+
+    .card{
+      background:linear-gradient(180deg,#11182b 0%, #0f1526 100%);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:var(--radius);
+      padding:18px;
+      box-shadow:var(--shadow);
+    }
+    .card h3{margin:0 0 6px;font-size:18px}
+    .muted{color:var(--muted)}
+
+    /* Tabs / nav */
+    .tabs{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 20px}
+    .tab{padding:8px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.1);cursor:pointer}
+    .tab.active{background:linear-gradient(135deg,var(--primary),var(--accent));border-color:transparent}
+
+    /* Sections */
+    section[hidden]{display:none !important}
+    section{animation:fade .25s ease}
+    @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+    /* Wallet */
+    .wallet{
+      display:flex;align-items:flex-end;justify-content:space-between;gap:12px
+    }
+    .credits{font-size:38px;font-weight:800;letter-spacing:.5px}
+    .pill{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.06);padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.08)}
+
+    /* Lists */
+    .list{display:flex;flex-direction:column;gap:12px;margin-top:10px}
+    .item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06)}
+    .item .title{font-weight:600}
+
+    /* Forms */
+    .row{display:grid;gap:12px}
+    @media(min-width:700px){.row.cols-2{grid-template-columns:1fr 1fr}}
+    label{font-size:14px;color:var(--muted)}
+    input,select,textarea{
+      width:100%;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.12);
+      background:#0c1222;color:var(--white)
+    }
+
+    /* Bottom nav */
+    .bottom-nav{
+      position:fixed;left:0;right:0;bottom:0;z-index:10;display:flex;gap:8px;justify-content:space-around;
+      padding:10px 12px;background:rgba(11,15,25,.75);backdrop-filter:blur(8px);border-top:1px solid rgba(255,255,255,.08)
+    }
+    .bottom-nav .nav-btn{flex:1;padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:#0f1629;color:var(--white);font-weight:600}
+    .bottom-nav .nav-btn.active{background:linear-gradient(135deg,var(--primary),var(--accent));border-color:transparent}
+
+    /* Hero */
+    .hero{display:flex;flex-direction:column;gap:16px;padding:18px;border-radius:var(--radius);background:radial-gradient(1200px 200px at 10% -100%,rgba(127,86,217,.35),transparent),linear-gradient(180deg,#121836,#0f1526);border:1px solid rgba(255,255,255,.06)}
+    .hero h1{margin:6px 0 0;font-size:28px}
+    .bullets{margin:6px 0 0;display:flex;flex-direction:column;gap:8px;color:#d7c8ff}
+
+    .tag{font-size:12px;letter-spacing:.3px;color:#d7c8ff;opacity:.9}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="brand"><span class="dot"></span> Green Campus Credits</div>
+      <div class="top-actions">
+        <button class="btn ghost" id="btn-login">Login</button>
+        <button class="btn primary" id="btn-get-started">Get Started</button>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs" id="tabs">
+      <div class="tab active" data-target="home">Home</div>
+      <div class="tab" data-target="dashboard">Dashboard</div>
+      <div class="tab" data-target="add-activity">Add Activity</div>
+      <div class="tab" data-target="rewards">Rewards</div>
+      <div class="tab" data-target="profile">Profile</div>
+    </div>
+
+    <!-- HOME -->
+    <section id="home">
+      <div class="hero">
+        <span class="tag">Problem → Solution</span>
+        <h1>Student efforts for a greener campus are not tracked, rewarded, or tied to real incentives.</h1>
+        <div class="grid cols-2">
+          <div class="card">
+            <h3>Our Approach</h3>
+            <ul class="bullets">
+              <li><b>AI</b> verifies sustainable actions (bike rides, recycling, energy savings) in real time.</li>
+              <li><b>GPS & Computer Vision</b> ensure accurate tracking.</li>
+              <li><b>Blockchain</b> secures actions & credits — tamper‑proof.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Academic Wallet</h3>
+            <p class="muted">Students earn <b>Carbon Credits</b> in a personal wallet. Credits can appear on transcripts or contribute to GPA weighting (institution policy).</p>
+            <div class="list">
+              <div class="item"><span class="title">Course Waivers</span><span class="pill">Redeemable</span></div>
+              <div class="item"><span class="title">Priority Registration</span><span class="pill">Redeemable</span></div>
+              <div class="item"><span class="title">Certificates & Badges</span><span class="pill">Shareable</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid cols-3" style="margin-top:16px">
+        <div class="card">
+          <h3>Live Verification</h3>
+          <p class="muted">This demo simulates AI/GPS checks. Connect to your Python backend later for real verification.</p>
+          <button class="btn success" onclick="mockVerify()">Run Mock Verification</button>
+          <p id="verify-status" class="muted" style="margin-top:10px"></p>
+        </div>
+        <div class="card">
+          <h3>Transparent Ledger</h3>
+          <p class="muted">Transactions are recorded as immutable entries. We emulate a chain here; swap with a blockchain SDK later.</p>
+          <button class="btn" onclick="appendBlock()">Add Demo Block</button>
+          <div id="chain" class="list"></div>
+        </div>
+        <div class="card">
+          <h3>Quick Start</h3>
+          <p class="muted">1) Add an activity → 2) Admin verifies → 3) Credits appear in wallet → 4) Redeem rewards.</p>
+          <button class="btn primary" onclick="go('add-activity')">Add Activity</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- DASHBOARD -->
+    <section id="dashboard" hidden>
+      <div class="grid cols-2">
+        <div class="card">
+          <h3>Your Wallet</h3>
+          <div class="wallet">
+            <div>
+              <div class="muted">Carbon Credits</div>
+              <div class="credits" id="wallet-credits">0</div>
+            </div>
+            <span class="pill" id="level-pill">Level: Seed</span>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Summary</h3>
+          <div class="list" id="summary-list"></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h3>Recent Actions</h3>
+        <div class="list" id="action-list"></div>
+      </div>
+    </section>
+
+    <!-- ADD ACTIVITY -->
+    <section id="add-activity" hidden>
+      <div class="card">
+        <h3>Log a Sustainable Activity</h3>
+        <div class="row cols-2">
+          <div>
+            <label>Activity Type</label>
+            <select id="activity-type">
+              
+                <option value="energy">Reducing power usage (1Kwh)</option>
+                <option value="assignment">Submitting assignments (min.2)</option>
+                <option value="workshops">Attended eco-workshops (min.2)</option>
+                <option value="cycling">Cycling(min.1Km)</option>
+            </select>
+          </div>
+          <div>
+            <label>Evidence (required)* (URL or note)</label>
+
+            <input id="activity-proof" placeholder="Link to photo/video or short note" />
+          </div>
+        </div>
+        <div class="row" style="margin-top:12px">
+          <label>Location (auto via GPS in real app)</label>
+          <input id="activity-location" placeholder="e.g., Cycle Stand A, Block C" />
+        </div>
+        <div class="row cols-2" style="margin-top:12px">
+          <div>
+            <label>Start Coordinates (lat,lng)</label>
+            <input id="start-coords" placeholder="e.g., 12.9716,77.5946" />
+          </div>
+          <div>
+            <label>End Coordinates (lat,lng)</label>
+            <input id="end-coords" placeholder="e.g., 12.9720,77.5950" />
+          </div>
+        </div>
+        <div class="row" style="margin-top:12px">
+          <div id="map" style="height: 300px; width: 100%; border-radius: 12px; background: #0c1222;"></div>
+        </div>
+        <div class="row" style="margin-top:12px">
+          <button class="btn primary" onclick="submitActivity()">Submit for Verification</button>
+          <span class="muted" id="submit-status"></span>
+        </div>
+      </div>
+
+      <div class="grid cols-2" style="margin-top:16px">
+        <div class="card">
+          <h3>Verifier (Mock Admin)</h3>
+          <p class="muted">Approve or reject pending items for faculty review.</p>
+          <div class="list" id="pending-list"></div>
+        </div>
+        <div class="card">
+          <h3>Credit Policy</h3>
+          <ul class="bullets">
+            <li>Assignments: <b>5</b> credits / trip</li>
+            <li>Eco Workshops <b>3</b> credits / drop</li>
+            <li>Energy Saving: <b>4</b> credits / session</li>
+            <li>Cycling: <b>2</b> credits/km</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- REWARDS -->
+    <section id="rewards" hidden>
+      <div class="grid cols-3">
+        <div class="card">
+          <h3>Course Waiver</h3>
+          <p class="muted">Partial waiver for 1 elective.</p>
+          <div class="pill">Cost: 120 CC</div>
+          <div style="margin-top:10px"><button class="btn" onclick="redeem('Course Waiver',120)">Redeem</button></div>
+        </div>
+        <div class="card">
+          <h3>Priority Registration</h3>
+          <p class="muted">Early slot access next semester.</p>
+          <div class="pill">Cost: 80 CC</div>
+          <div style="margin-top:10px"><button class="btn" onclick="redeem('Priority Registration',80)">Redeem</button></div>
+        </div>
+        <div class="card">
+          <h3>Certificate</h3>
+          <p class="muted">Official sustainability certificate.</p>
+          <div class="pill">Cost: 40 CC</div>
+          <div style="margin-top:10px"><button class="btn" onclick="redeem('Certificate',40)">Redeem</button></div>
+        </div>
+      </div>
+      <div id="redeem-status" class="muted" style="margin-top:12px"></div>
+    </section>
+
+    <!-- PROFILE -->
+    <section id="profile" hidden>
+      <div class="grid cols-2">
+        <div class="card">
+          <h3>Student Profile</h3>
+          <div class="row cols-2">
+            <div>
+              <label>Full Name</label>
+              <input id="name" placeholder="e.g., Sneha Ray" />
+            </div>
+            <div>
+              <label>Student ID</label>
+              <input id="sid" placeholder="e.g., CSE22-041" />
+            </div>
+          </div>
+          <div class="row cols-2" style="margin-top:12px">
+            <div>
+              <label>Email</label>
+              <input id="email" placeholder="you@college.edu" />
+            </div>
+            <div>
+              <label>Program</label>
+              <input id="program" placeholder="B.Tech CSE" />
+            </div>
+          </div>
+          <div class="row" style="margin-top:12px">
+            <button class="btn success" onclick="saveProfile()">Save Profile</button>
+            <span id="profile-status" class="muted"></span>
+          </div>
+        </div>
+        
+      </div>
+    </section>
+
+    <!-- Bottom Nav -->
+    <div class="bottom-nav">
+      <button class="nav-btn active" data-target="home">Home</button>
+      <button class="nav-btn" data-target="dashboard">Dashboard</button>
+      <button class="nav-btn" data-target="add-activity">Add</button>
+      <button class="nav-btn" data-target="rewards">Rewards</button>
+      <button class="nav-btn" data-target="profile">Profile</button>
+    </div>
+  </div>
+
+  <script>
+    let map, directionsService, directionsRenderer;
+
+    function initMap() {
+      map = new google.maps.Map(document.getElementById('map'), {
+        center: { lat: 12.9716, lng: 77.5946 },
+        zoom: 15
+      });
+      directionsService = new google.maps.DirectionsService();
+      directionsRenderer = new google.maps.DirectionsRenderer();
+      directionsRenderer.setMap(map);
+    }
+
+    function calculateRoute(start, end) {
+      const request = {
+        origin: start,
+        destination: end,
+        travelMode: google.maps.TravelMode.BICYCLING
+      };
+      directionsService.route(request, (result, status) => {
+        if (status == 'OK') {
+          directionsRenderer.setDirections(result);
+        } else {
+          console.error('Directions request failed due to ' + status);
+        }
+      });
+    }
+
+    /* -------------------- State -------------------- */
+    const S = {
+      profile: JSON.parse(localStorage.getItem('profile')||'{}'),
+      activities: JSON.parse(localStorage.getItem('activities')||'[]'),
+      pending: JSON.parse(localStorage.getItem('pending')||'[]'),
+      credits: Number(localStorage.getItem('credits')||0),
+      chain: JSON.parse(localStorage.getItem('chain')||'[]'),
+    };
+
+    const creditMap = { assignments:5, workshops:3, energy:4 };
+
+    function save(){
+      localStorage.setItem('profile', JSON.stringify(S.profile));
+      localStorage.setItem('activities', JSON.stringify(S.activities));
+      localStorage.setItem('pending', JSON.stringify(S.pending));
+      localStorage.setItem('credits', String(S.credits));
+      localStorage.setItem('chain', JSON.stringify(S.chain));
+      render();
+    }
+
+    /* -------------------- Nav -------------------- */
+    function go(id){
+      document.querySelectorAll('section').forEach(sec=>sec.hidden = sec.id!==id);
+      document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.target===id));
+      document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.target===id));
+      window.scrollTo({top:0,behavior:'instant'});
+    }
+    document.getElementById('tabs').addEventListener('click',e=>{
+      const t=e.target.closest('.tab'); if(!t) return; go(t.dataset.target);
+    });
+    document.querySelectorAll('.bottom-nav .nav-btn').forEach(b=>b.addEventListener('click',()=>go(b.dataset.target)));
+    document.getElementById('btn-get-started').onclick=()=>go('add-activity');
+    document.getElementById('btn-login').onclick=()=>go('profile');
+
+    /* -------------------- Home demo actions -------------------- */
+    function mockVerify(){
+      const el = document.getElementById('verify-status');
+      el.textContent = 'Running AI + GPS checks...';
+      setTimeout(()=>{ el.textContent = '✅ Verification model passed sample inputs (mock).'; }, 900);
+    }
+    function appendBlock(){
+      const entry = { ts: Date.now(), hash: Math.random().toString(36).slice(2,10) };
+      S.chain.push(entry); save();
+    }
+
+    /* -------------------- Add Activity -------------------- */
+    function submitActivity(){
+      const type = document.getElementById('activity-type').value;
+      const proof = document.getElementById('activity-proof').value.trim();
+      const loc = document.getElementById('activity-location').value.trim();
+      const startCoords = document.getElementById('start-coords').value.trim();
+      const endCoords = document.getElementById('end-coords').value.trim();
+      if(!type){ return; }
+      const activity = { id:crypto.randomUUID(), type, proof, loc, startCoords, endCoords, ts:Date.now() };
+      S.pending.push(activity);
+      if(startCoords && endCoords){
+        calculateRoute(startCoords, endCoords);
+      }
+      document.getElementById('submit-status').textContent = 'Submitted. Awaiting verification.';
+      document.getElementById('activity-proof').value='';
+      document.getElementById('activity-location').value='';
+      document.getElementById('start-coords').value='';
+      document.getElementById('end-coords').value='';
+      save();
+    }
+
+    function approve(id){
+      const p = S.pending.find(x=>x.id===id); if(!p) return;
+      const credits = creditMap[p.type]||0;
+      S.credits += credits;
+      S.activities.unshift({ ...p, credits });
+      S.pending = S.pending.filter(x=>x.id!==id);
+      S.chain.push({ ts:Date.now(), type:'credit', amount:credits, ref:id });
+      save();
+    }
+    function rejectItem(id){
+      S.pending = S.pending.filter(x=>x.id!==id); save();
+    }
+
+    /* -------------------- Rewards -------------------- */
+    function redeem(name,cost){
+      const box = document.getElementById('redeem-status');
+      if(S.credits < cost){ box.textContent = 'Not enough credits.'; return; }
+      S.credits -= cost;
+      S.chain.push({ ts:Date.now(), type:'redeem', name, cost });
+      box.textContent = `Redeemed ${name} for ${cost} CC.`;
+      save();
+    }
+
+    /* -------------------- Profile -------------------- */
+    function saveProfile(){
+      S.profile = {
+        name: document.getElementById('name').value,
+        sid: document.getElementById('sid').value,
+        email: document.getElementById('email').value,
+        program: document.getElementById('program').value,
+      }; save();
+      document.getElementById('profile-status').textContent='Saved!';
+    }
+
+    function exportJSON(){
+      const data = JSON.stringify({ profile:S.profile, credits:S.credits, activities:S.activities }, null, 2);
+      const blob = new Blob([data], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'green-campus-snapshot.json'; a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    /* -------------------- Rendering -------------------- */
+    function fmt(ts){ const d=new Date(ts); return d.toLocaleString(); }
+    function render(){
+      // Wallet
+      document.getElementById('wallet-credits').textContent = S.credits;
+      const lvl = S.credits>200?'Forest':S.credits>120?'Grove':S.credits>60?'Sapling':'Seed';
+      document.getElementById('level-pill').textContent = 'Level: ' + lvl;
+
+      // Actions
+      const list = document.getElementById('action-list');
+      list.innerHTML = S.activities.map(a=>`<div class="item"><div><div class="title">${a.type}</div><div class="muted">${fmt(a.ts)} · ${a.loc||'No location'}</div></div><div class="pill">+${a.credits} CC</div></div>`).join('') || '<div class="muted">No actions yet.</div>';
+
+      // Pending
+      const pend = document.getElementById('pending-list');
+      pend.innerHTML = S.pending.map(p=>`<div class="item"><div><div class="title">${p.type}</div><div class="muted">${fmt(p.ts)} · ${p.loc||'—'}</div></div><div style="display:flex;gap:8px"><button class="btn success" onclick="approve('${p.id}')">Approve</button><button class="btn danger" onclick="rejectItem('${p.id}')">Reject</button></div></div>`).join('') || '<div class="muted">Nothing pending.</div>';
+
+      // Summary
+      const counts = {cycling:0,recycling:0,energy:0};
+      S.activities.forEach(a=>counts[a.type]++);
+      document.getElementById('summary-list').innerHTML = Object.entries(counts).map(([k,v])=>`<div class="item"><span class="title">${k}</span><span class="pill">${v}</span></div>`).join('');
+
+      // Chain preview
+      const chain = document.getElementById('chain');
+      if(chain){
+        chain.innerHTML = S.chain.slice(-5).reverse().map(b=>`<div class="item"><div class="title">${b.type||'block'} · ${b.hash||b.name||''}</div><div class="muted">${fmt(b.ts)}</div></div>`).join('');
+      }
+
+      // Profile
+      document.getElementById('name').value = S.profile.name||'';
+      document.getElementById('sid').value = S.profile.sid||'';
+      document.getElementById('email').value = S.profile.email||'';
+      document.getElementById('program').value = S.profile.program||'';
+    }
+
+    render();
+  </script>
+</body>
+</html>
