@@ -52,7 +52,9 @@
     .btn{
       border:none;cursor:pointer;border-radius:12px;padding:10px 14px;font-weight:600;
       background:var(--panel);color:var(--white);box-shadow:var(--shadow);
+      transition: all 0.2s;
     }
+    .btn:hover{opacity:0.9;transform:translateY(-1px)}
     .btn.primary{background:linear-gradient(135deg,var(--primary),var(--accent))}
     .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,.12)}
     .btn.success{background:linear-gradient(135deg,#3acf8e,var(--success))}
@@ -74,7 +76,8 @@
 
     /* Tabs / nav */
     .tabs{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 20px}
-    .tab{padding:8px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.1);cursor:pointer}
+    .tab{padding:8px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.1);cursor:pointer;transition:all 0.2s}
+    .tab:hover{background:rgba(255,255,255,.05)}
     .tab.active{background:linear-gradient(135deg,var(--primary),var(--accent));border-color:transparent}
 
     /* Sections */
@@ -108,7 +111,8 @@
       position:fixed;left:0;right:0;bottom:0;z-index:10;display:flex;gap:8px;justify-content:space-around;
       padding:10px 12px;background:rgba(11,15,25,.75);backdrop-filter:blur(8px);border-top:1px solid rgba(255,255,255,.08)
     }
-    .bottom-nav .nav-btn{flex:1;padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:#0f1629;color:var(--white);font-weight:600}
+    .bottom-nav .nav-btn{flex:1;padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:#0f1629;color:var(--white);font-weight:600;cursor:pointer;transition:all 0.2s}
+    .bottom-nav .nav-btn:hover{background:#15203b}
     .bottom-nav .nav-btn.active{background:linear-gradient(135deg,var(--primary),var(--accent));border-color:transparent}
 
     /* Hero */
@@ -117,6 +121,38 @@
     .bullets{margin:6px 0 0;display:flex;flex-direction:column;gap:8px;color:#d7c8ff}
 
     .tag{font-size:12px;letter-spacing:.3px;color:#d7c8ff;opacity:.9}
+
+    /* Ride Verification Styles */
+    .verification-controls{
+      display:flex;gap:8px;margin:12px 0;
+    }
+    .verification-log{
+      background:rgba(255,255,255,.04);
+      border-radius:12px;
+      padding:12px;
+      max-height:200px;
+      overflow-y:auto;
+      font-family:monospace;
+      font-size:12px;
+      line-height:1.4;
+      margin-top:8px;
+    }
+    .verification-status{
+      margin-top:8px;
+      padding:8px 12px;
+      border-radius:8px;
+      font-weight:600;
+    }
+    .verification-success{
+      background:rgba(46,204,113,.2);
+      color:var(--success);
+      border:1px solid rgba(46,204,113,.3);
+    }
+    .verification-failed{
+      background:rgba(255,93,93,.2);
+      color:var(--danger);
+      border:1px solid rgba(255,93,93,.3);
+    }
   </style>
 </head>
 <body>
@@ -167,7 +203,7 @@
       <div class="grid cols-3" style="margin-top:16px">
         <div class="card">
           <h3>Live Verification</h3>
-          <p class="muted">This demo simulates AI/GPS checks. Connect to your Python backend later for real verification.</p>
+          <p class="muted">This demo simulates AI/GPS checks. C</p>
           <button class="btn success" onclick="mockVerify()">Run Mock Verification</button>
           <p id="verify-status" class="muted" style="margin-top:10px"></p>
         </div>
@@ -217,16 +253,14 @@
           <div>
             <label>Activity Type</label>
             <select id="activity-type">
-              
-                <option value="energy">Reducing power usage (1Kwh)</option>
-                <option value="assignment">Submitting assignments (min.2)</option>
-                <option value="workshops">Attended eco-workshops (min.2)</option>
-                <option value="cycling">Cycling(min.1Km)</option>
+              <option value="energy">Reducing power usage (1Kwh)</option>
+              <option value="assignments">Submitting assignments (min.2)</option>
+              <option value="workshops">Attended eco-workshops (min.2)</option>
+              <option value="cycling">Cycling (min.1Km)</option>
             </select>
           </div>
           <div>
             <label>Evidence (required)* (URL or note)</label>
-
             <input id="activity-proof" placeholder="Link to photo/video or short note" />
           </div>
         </div>
@@ -247,6 +281,22 @@
         <div class="row" style="margin-top:12px">
           <div id="map" style="height: 300px; width: 100%; border-radius: 12px; background: #0c1222;"></div>
         </div>
+
+        <!-- Real-time Ride Verification -->
+        <div class="row" style="margin-top:12px">
+          <div class="card" style="margin:0;background:rgba(91,124,250,.1);border-color:var(--primary)">
+            <h3>🚴 Real-time Ride Verification</h3>
+            <p class="muted">Use GPS tracking to verify your cycling activity in real-time.</p>
+            <div class="verification-controls">
+              <button class="btn success" onclick="startRideVerification()">Start Ride</button>
+              <button class="btn danger" onclick="stopRideVerification()">Stop Ride</button>
+              <button class="btn ghost" onclick="clearVerificationLog()">Clear Log</button>
+            </div>
+            <div id="verification-log" class="verification-log"></div>
+            <div id="verification-result" class="verification-status" style="display:none"></div>
+          </div>
+        </div>
+
         <div class="row" style="margin-top:12px">
           <button class="btn primary" onclick="submitActivity()">Submit for Verification</button>
           <span class="muted" id="submit-status"></span>
@@ -262,10 +312,10 @@
         <div class="card">
           <h3>Credit Policy</h3>
           <ul class="bullets">
-            <li>Assignments: <b>5</b> credits / trip</li>
-            <li>Eco Workshops <b>3</b> credits / drop</li>
-            <li>Energy Saving: <b>4</b> credits / session</li>
-            <li>Cycling: <b>2</b> credits/km</li>
+            <li>Assignments: <b>5</b> credits / completion</li>
+            <li>Eco Workshops: <b>3</b> credits / session</li>
+            <li>Energy Saving: <b>4</b> credits / hour</li>
+            <li>Cycling: <b>2</b> credits / km</li>
           </ul>
         </div>
       </div>
@@ -326,7 +376,6 @@
             <span id="profile-status" class="muted"></span>
           </div>
         </div>
-        
       </div>
     </section>
 
@@ -368,6 +417,143 @@
       });
     }
 
+    /* -------------------- Ride Verification System -------------------- */
+    let watchId = null;
+    let rideData = [];
+    let verificationInProgress = false;
+
+    // Haversine formula to calculate distance (in km)
+    function haversine(lat1, lon1, lat2, lon2) {
+      const R = 6371; // Earth radius in km
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    }
+
+    function logVerification(msg) {
+      const log = document.getElementById("verification-log");
+      log.innerHTML += msg + "<br>";
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function startRideVerification() {
+      if (verificationInProgress) {
+        logVerification("⚠️ Ride verification already in progress");
+        return;
+      }
+
+      rideData = [];
+      document.getElementById("verification-log").innerHTML = "";
+      document.getElementById("verification-result").style.display = "none";
+      verificationInProgress = true;
+
+      if (navigator.geolocation) {
+        watchId = navigator.geolocation.watchPosition((pos) => {
+          const { latitude, longitude, speed } = pos.coords;
+          const timestamp = pos.timestamp;
+          rideData.push({ latitude, longitude, timestamp });
+          
+          const speedKmh = speed ? (speed * 3.6).toFixed(1) : "N/A";
+          logVerification(`📍 ${latitude.toFixed(5)}, ${longitude.toFixed(5)} | Speed: ${speedKmh} km/h`);
+        }, (err) => {
+          logVerification("❌ Location error: " + err.message);
+          verificationInProgress = false;
+        }, { 
+          enableHighAccuracy: true, 
+          maximumAge: 0, 
+          timeout: 5000 
+        });
+        
+        logVerification("✅ Ride verification started...");
+      } else {
+        logVerification("❌ Geolocation not supported by this browser");
+        verificationInProgress = false;
+      }
+    }
+
+    function stopRideVerification() {
+      if (!verificationInProgress) {
+        logVerification("⚠️ No ride verification in progress");
+        return;
+      }
+
+      if (watchId) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+      }
+      
+      verificationInProgress = false;
+      logVerification("🛑 Ride verification stopped.");
+
+      if (rideData.length < 2) {
+        showVerificationResult("Not enough GPS data recorded for verification.", false);
+        return;
+      }
+
+      // Calculate total distance
+      let totalDist = 0;
+      for (let i = 1; i < rideData.length; i++) {
+        totalDist += haversine(
+          rideData[i-1].latitude, rideData[i-1].longitude,
+          rideData[i].latitude, rideData[i].longitude
+        );
+      }
+
+      // Calculate total time in hours
+      const timeHours = (rideData[rideData.length-1].timestamp - rideData[0].timestamp) / (1000*60*60);
+      const avgSpeed = totalDist / timeHours;
+
+      logVerification(`📏 Total Distance: ${totalDist.toFixed(2)} km`);
+      logVerification(`⏱️ Duration: ${(timeHours * 60).toFixed(1)} minutes`);
+      logVerification(`🚴 Average Speed: ${avgSpeed.toFixed(1)} km/h`);
+
+      // Verify conditions for cycling (distance >= 1km, reasonable cycling speed)
+      if (totalDist >= 1 && avgSpeed >= 5 && avgSpeed <= 30) {
+        showVerificationResult(`✅ Ride verified! Distance: ${totalDist.toFixed(2)}km, Avg Speed: ${avgSpeed.toFixed(1)}km/h`, true);
+        
+        // Auto-fill activity form
+        document.getElementById('activity-type').value = 'cycling';
+        document.getElementById('activity-proof').value = `GPS verified ride: ${totalDist.toFixed(2)}km in ${(timeHours * 60).toFixed(1)} minutes`;
+        document.getElementById('activity-location').value = `Start: ${rideData[0].latitude.toFixed(5)}, ${rideData[0].longitude.toFixed(5)}`;
+        
+        if (rideData.length >= 2) {
+          const start = rideData[0];
+          const end = rideData[rideData.length - 1];
+          document.getElementById('start-coords').value = `${start.latitude.toFixed(6)},${start.longitude.toFixed(6)}`;
+          document.getElementById('end-coords').value = `${end.latitude.toFixed(6)},${end.longitude.toFixed(6)}`;
+          
+          // Update map with route
+          calculateRoute(
+            `${start.latitude},${start.longitude}`,
+            `${end.latitude},${end.longitude}`
+          );
+        }
+      } else {
+        let reason = "";
+        if (totalDist < 1) reason = "Distance too short (minimum 1km required)";
+        else if (avgSpeed < 5) reason = "Speed too slow for cycling";
+        else if (avgSpeed > 30) reason = "Speed too fast for cycling";
+        
+        showVerificationResult(`❌ Verification failed: ${reason}`, false);
+      }
+    }
+
+    function showVerificationResult(message, isSuccess) {
+      const resultDiv = document.getElementById("verification-result");
+      resultDiv.textContent = message;
+      resultDiv.className = `verification-status ${isSuccess ? 'verification-success' : 'verification-failed'}`;
+      resultDiv.style.display = "block";
+    }
+
+    function clearVerificationLog() {
+      document.getElementById("verification-log").innerHTML = "";
+      document.getElementById("verification-result").style.display = "none";
+    }
+
     /* -------------------- State -------------------- */
     const S = {
       profile: JSON.parse(localStorage.getItem('profile')||'{}'),
@@ -377,7 +563,7 @@
       chain: JSON.parse(localStorage.getItem('chain')||'[]'),
     };
 
-    const creditMap = { assignments:5, workshops:3, energy:4 };
+    const creditMap = { assignments:5, workshops:3, energy:4, cycling:2 };
 
     function save(){
       localStorage.setItem('profile', JSON.stringify(S.profile));
@@ -393,11 +579,13 @@
       document.querySelectorAll('section').forEach(sec=>sec.hidden = sec.id!==id);
       document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.target===id));
       document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.target===id));
-      window.scrollTo({top:0,behavior:'instant'});
+      window.scrollTo({top:0,behavior:'smooth'});
     }
+    
     document.getElementById('tabs').addEventListener('click',e=>{
       const t=e.target.closest('.tab'); if(!t) return; go(t.dataset.target);
     });
+    
     document.querySelectorAll('.bottom-nav .nav-btn').forEach(b=>b.addEventListener('click',()=>go(b.dataset.target)));
     document.getElementById('btn-get-started').onclick=()=>go('add-activity');
     document.getElementById('btn-login').onclick=()=>go('profile');
@@ -408,9 +596,11 @@
       el.textContent = 'Running AI + GPS checks...';
       setTimeout(()=>{ el.textContent = '✅ Verification model passed sample inputs (mock).'; }, 900);
     }
+    
     function appendBlock(){
-      const entry = { ts: Date.now(), hash: Math.random().toString(36).slice(2,10) };
-      S.chain.push(entry); save();
+      const entry = { ts: Date.now(), hash: Math.random().toString(36).slice(2,10), type: 'demo' };
+      S.chain.push(entry); 
+      save();
     }
 
     /* -------------------- Add Activity -------------------- */
@@ -420,40 +610,62 @@
       const loc = document.getElementById('activity-location').value.trim();
       const startCoords = document.getElementById('start-coords').value.trim();
       const endCoords = document.getElementById('end-coords').value.trim();
-      if(!type){ return; }
-      const activity = { id:crypto.randomUUID(), type, proof, loc, startCoords, endCoords, ts:Date.now() };
+      
+      if(!type || !proof){ 
+        document.getElementById('submit-status').textContent = 'Please fill required fields.';
+        return; 
+      }
+      
+      const activity = { 
+        id: Date.now().toString(), 
+        type, 
+        proof, 
+        loc: loc || 'Not specified', 
+        startCoords, 
+        endCoords, 
+        ts: Date.now() 
+      };
+      
       S.pending.push(activity);
+      
       if(startCoords && endCoords){
         calculateRoute(startCoords, endCoords);
       }
+      
       document.getElementById('submit-status').textContent = 'Submitted. Awaiting verification.';
       document.getElementById('activity-proof').value='';
       document.getElementById('activity-location').value='';
       document.getElementById('start-coords').value='';
       document.getElementById('end-coords').value='';
+      
       save();
     }
 
     function approve(id){
       const p = S.pending.find(x=>x.id===id); if(!p) return;
-      const credits = creditMap[p.type]||0;
+      const credits = creditMap[p.type] || 2;
       S.credits += credits;
       S.activities.unshift({ ...p, credits });
       S.pending = S.pending.filter(x=>x.id!==id);
       S.chain.push({ ts:Date.now(), type:'credit', amount:credits, ref:id });
       save();
     }
+    
     function rejectItem(id){
-      S.pending = S.pending.filter(x=>x.id!==id); save();
+      S.pending = S.pending.filter(x=>x.id!==id); 
+      save();
     }
 
     /* -------------------- Rewards -------------------- */
     function redeem(name,cost){
       const box = document.getElementById('redeem-status');
-      if(S.credits < cost){ box.textContent = 'Not enough credits.'; return; }
+      if(S.credits < cost){ 
+        box.textContent = 'Not enough credits.'; 
+        return; 
+      }
       S.credits -= cost;
       S.chain.push({ ts:Date.now(), type:'redeem', name, cost });
-      box.textContent = `Redeemed ${name} for ${cost} CC.`;
+      box.textContent = `✅ Redeemed ${name} for ${cost} CC.`;
       save();
     }
 
@@ -464,21 +676,20 @@
         sid: document.getElementById('sid').value,
         email: document.getElementById('email').value,
         program: document.getElementById('program').value,
-      }; save();
-      document.getElementById('profile-status').textContent='Saved!';
-    }
-
-    function exportJSON(){
-      const data = JSON.stringify({ profile:S.profile, credits:S.credits, activities:S.activities }, null, 2);
-      const blob = new Blob([data], {type:'application/json'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = 'green-campus-snapshot.json'; a.click();
-      URL.revokeObjectURL(url);
+      }; 
+      save();
+      document.getElementById('profile-status').textContent='✅ Saved!';
+      setTimeout(()=>{
+        document.getElementById('profile-status').textContent='';
+      }, 2000);
     }
 
     /* -------------------- Rendering -------------------- */
-    function fmt(ts){ const d=new Date(ts); return d.toLocaleString(); }
+    function fmt(ts){ 
+      const d = new Date(ts); 
+      return d.toLocaleString(); 
+    }
+    
     function render(){
       // Wallet
       document.getElementById('wallet-credits').textContent = S.credits;
@@ -487,30 +698,63 @@
 
       // Actions
       const list = document.getElementById('action-list');
-      list.innerHTML = S.activities.map(a=>`<div class="item"><div><div class="title">${a.type}</div><div class="muted">${fmt(a.ts)} · ${a.loc||'No location'}</div></div><div class="pill">+${a.credits} CC</div></div>`).join('') || '<div class="muted">No actions yet.</div>';
+      list.innerHTML = S.activities.length ? 
+        S.activities.map(a=>`
+          <div class="item">
+            <div>
+              <div class="title">${a.type}</div>
+              <div class="muted">${fmt(a.ts)} · ${a.loc}</div>
+            </div>
+            <div class="pill">+${a.credits} CC</div>
+          </div>
+        `).join('') : '<div class="muted">No actions yet. Add your first sustainable activity!</div>';
 
       // Pending
       const pend = document.getElementById('pending-list');
-      pend.innerHTML = S.pending.map(p=>`<div class="item"><div><div class="title">${p.type}</div><div class="muted">${fmt(p.ts)} · ${p.loc||'—'}</div></div><div style="display:flex;gap:8px"><button class="btn success" onclick="approve('${p.id}')">Approve</button><button class="btn danger" onclick="rejectItem('${p.id}')">Reject</button></div></div>`).join('') || '<div class="muted">Nothing pending.</div>';
+      pend.innerHTML = S.pending.length ?
+        S.pending.map(p=>`
+          <div class="item">
+            <div>
+              <div class="title">${p.type}</div>
+              <div class="muted">${fmt(p.ts)} · ${p.loc}</div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn success" onclick="approve('${p.id}')">Approve</button>
+              <button class="btn danger" onclick="rejectItem('${p.id}')">Reject</button>
+            </div>
+          </div>
+        `).join('') : '<div class="muted">Nothing pending.</div>';
 
       // Summary
-      const counts = {cycling:0,recycling:0,energy:0};
-      S.activities.forEach(a=>counts[a.type]++);
-      document.getElementById('summary-list').innerHTML = Object.entries(counts).map(([k,v])=>`<div class="item"><span class="title">${k}</span><span class="pill">${v}</span></div>`).join('');
+      const counts = {assignments:0, workshops:0, energy:0, cycling:0};
+      S.activities.forEach(a=>counts[a.type] = (counts[a.type] || 0) + 1);
+      document.getElementById('summary-list').innerHTML = Object.entries(counts)
+        .map(([k,v])=>`<div class="item"><span class="title">${k}</span><span class="pill">${v}</span></div>`)
+        .join('');
 
       // Chain preview
       const chain = document.getElementById('chain');
       if(chain){
-        chain.innerHTML = S.chain.slice(-5).reverse().map(b=>`<div class="item"><div class="title">${b.type||'block'} · ${b.hash||b.name||''}</div><div class="muted">${fmt(b.ts)}</div></div>`).join('');
+        const recentChain = S.chain.slice(-5).reverse();
+        chain.innerHTML = recentChain.length ?
+          recentChain.map(b=>`
+            <div class="item">
+              <div class="title">${b.type || 'block'} · ${b.hash || b.name || b.amount || ''}</div>
+              <div class="muted">${fmt(b.ts)}</div>
+            </div>
+          `).join('') : '<div class="muted">No blocks yet.</div>';
       }
 
       // Profile
-      document.getElementById('name').value = S.profile.name||'';
-      document.getElementById('sid').value = S.profile.sid||'';
-      document.getElementById('email').value = S.profile.email||'';
-      document.getElementById('program').value = S.profile.program||'';
+      if(document.getElementById('name')){
+        document.getElementById('name').value = S.profile.name || '';
+        document.getElementById('sid').value = S.profile.sid || '';
+        document.getElementById('email').value = S.profile.email || '';
+        document.getElementById('program').value = S.profile.program || '';
+      }
     }
 
+    // Initialize
     render();
   </script>
 </body>
